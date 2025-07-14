@@ -34,7 +34,7 @@ jobs:
         cd yolo
         mkdir -pv onnx
         cd onnx
-        wget https://github.com/MelanTech/model_convert/releases/download/yolo11s_nms/yolo11s_nms.onnx -O yolo.pt
+        wget https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt -O yolo.pt
         python ../export_det_v11.pyc -w yolo.pt --sim
 
     - name: Upload artifact
