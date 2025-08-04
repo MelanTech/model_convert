@@ -18,7 +18,7 @@ def parse_args():
 
 def main(args):
   model = YOLO(args.weights)
-  model.export(format="onnx")
+  model.export(format="onnx", opset=13)
 
 if __name__ == "__main__":
   main(parse_args())
