@@ -31,7 +31,7 @@ jobs:
             --framework=5 \
             --output=cls \
             --soc_version=Ascend310B4 \
-            --input_shape="input:-1,3,-1,-1"
+            --input_shape="x:-1,3,-1,-1"
         
         echo "Processing det..."
         wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/det.onnx -O det.onnx
@@ -39,7 +39,7 @@ jobs:
             --framework=5 \
             --output=det \
             --soc_version=Ascend310B4 \
-            --input_shape="input:-1,3,-1,-1"
+            --input_shape="x:-1,3,-1,-1"
         
         echo "Processing rec..."
         wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/rec.onnx -O rec.onnx
@@ -47,7 +47,7 @@ jobs:
             --framework=5 \
             --output=rec \
             --soc_version=Ascend310B4 \
-            --input_shape="input:-1,3,48,-1"
+            --input_shape="x:-1,3,48,-1"
 
     - name: Upload OM artifacts
       uses: actions/upload-artifact@v4
