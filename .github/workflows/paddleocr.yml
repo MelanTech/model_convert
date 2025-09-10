@@ -1,0 +1,54 @@
+name: Convert Multiple ONNX to OM with Custom Parameters
+
+# 仅手动触发工作流
+on:
+  workflow_dispatch:
+
+jobs:
+  onnx2om:
+    runs-on: ubuntu-22.04
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+    - name: Create working directories
+      run: |
+        mkdir -pv om
+
+    - name: Download and convert multiple ONNX files with custom parameters
+      shell: bash
+      run: |
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+        cd om
+        
+        echo "Processing model1..."
+        wget -O "cls.onnx" "https://github.com/MelanTech/model_convert/releases/download/paddleocr/cls.onnx"
+        atc --model="cls.onnx" \
+            --framework=5 \
+            --output="cls" \
+            --soc_version=Ascend310B4 \
+            --input_shape="input:-1,3,-1,-1"
+        
+        echo "Processing model2..."
+        wget -O "det.onnx" "https://github.com/MelanTech/model_convert/releases/download/paddleocr/det.onnx"
+        atc --model="det.onnx" \
+            --framework=5 \
+            --output="det" \
+            --soc_version=Ascend310B4 \
+            --input_shape="input:-1,3,-1,-1"
+        
+        echo "Processing model3..."
+        wget -O "rec.onnx" "https://github.com/MelanTech/model_convert/releases/download/paddleocr/rec.onnx"
+        atc --model="rec.onnx" \
+            --framework=5 \
+            --output="rec" \
+            --soc_version=Ascend310B4 \
+            --input_shape="input:-1,3,48,-1"
+
+    - name: Upload OM artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: om_artifacts
+        path: om/*.om
