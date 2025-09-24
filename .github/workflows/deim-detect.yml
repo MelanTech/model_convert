@@ -35,7 +35,7 @@ jobs:
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
         cd om
-        atc --model=deim_dfine_hgnetv2_s_coco_120e.onnx --framework=5 --output=deim_dfine_hgnetv2_s_coco_120e --input_shape="images:1,3,640,640;orig_target_sizes:1,2"  --soc_version=Ascend310B4
+        atc --model=model.onnx --framework=5 --output=deim_dfine_hgnetv2_s_coco_120e --input_shape="images:1,3,640,640;orig_target_sizes:1,2"  --soc_version=Ascend310B4
 
     - name: Upload OM artifact
       uses: actions/upload-artifact@v4
