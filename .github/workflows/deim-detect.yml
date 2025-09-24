@@ -21,6 +21,8 @@ jobs:
 
     - name: Download specified ONNX file
       run: |
+        apt-get update && apt-get install -y wget
+        
         ONNX_URL="https://github.com/MelanTech/model_convert/releases/download/deim/deim_0923_final_real_synth.onnx"
         
         wget -O onnx_artifacts/model.onnx $ONNX_URL
