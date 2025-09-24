@@ -1,0 +1,44 @@
+name: Convert DEIM-N to OM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  onnx2om:
+    strategy:
+      matrix:
+        runs-on: [ubuntu-22.04]
+    runs-on: ${{ matrix.runs-on }}
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+    - name: Create working directories
+      run: |
+        mkdir -pv onnx_artifacts
+        mkdir -pv om
+
+    - name: Download specified ONNX file
+      run: |
+        apt-get update && apt-get install -y wget
+        
+        ONNX_URL="https://github.com/MelanTech/model_convert/releases/download/deim/deim_n_0923_final_real_synth.onnx"
+        
+        wget -O onnx_artifacts/model.onnx $ONNX_URL
+
+    - name: Convert ONNX to OM
+      shell: bash
+      run: |
+        SRC_PATH=$(pwd)
+        cp -vr ${SRC_PATH}/onnx_artifacts/*.onnx ./om/
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+        cd om
+        atc --model=model.onnx --framework=5 --output=deim_dfine_hgnetv2_n_coco_120e --input_shape="images:1,3,640,640;orig_target_sizes:1,2"  --soc_version=Ascend310B4
+
+    - name: Upload OM artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: om_artifacts
+        path: om/*.om
