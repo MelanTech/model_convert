@@ -1,4 +1,4 @@
-name: Convert YOLO to OM
+name: Convert DEIM to OM
 
 on:
   workflow_dispatch:
