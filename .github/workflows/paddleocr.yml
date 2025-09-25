@@ -25,6 +25,26 @@ jobs:
         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
         cd om
         
+        echo "Processing rec..."
+        wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/rec.onnx -O rec.onnx
+        atc --model=rec.onnx \
+            --framework=5 \
+            --output=rec \
+            --input_format=NCHW \
+            --input_shape="x:-1,3,48,320" \
+            --soc_version=Ascend310B4 \
+            --dynamic_batch_size="1,2,3,4,5,6"
+            
+        
+        echo "Processing det..."
+        wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/det.onnx -O det.onnx
+        atc --model=det.onnx \
+            --framework=5 \
+            --output=det \
+            --input_format=NCHW \
+            --soc_version=Ascend310B4 \
+            --input_shape="x:-1,3,-1,-1"
+        
         echo "Processing cls..."
         wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/cls.onnx -O cls.onnx
         atc --model=cls.onnx \
@@ -32,22 +52,6 @@ jobs:
             --output=cls \
             --soc_version=Ascend310B4 \
             --input_shape="x:-1,3,-1,-1"
-        
-        echo "Processing det..."
-        wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/det.onnx -O det.onnx
-        atc --model=det.onnx \
-            --framework=5 \
-            --output=det \
-            --soc_version=Ascend310B4 \
-            --input_shape="x:-1,3,-1,-1"
-        
-        echo "Processing rec..."
-        wget https://github.com/MelanTech/model_convert/releases/download/paddleocr/rec.onnx -O rec.onnx
-        atc --model=rec.onnx \
-            --framework=5 \
-            --output=rec \
-            --soc_version=Ascend310B4 \
-            --input_shape="x:-1,3,48,-1"
 
     - name: Upload OM artifacts
       uses: actions/upload-artifact@v4
