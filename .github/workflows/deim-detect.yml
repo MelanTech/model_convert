@@ -23,7 +23,7 @@ jobs:
       run: |
         apt-get update && apt-get install -y wget
         
-        ONNX_URL="https://github.com/MelanTech/model_convert/releases/download/deim/deim_0925_final_real_book.onnx"
+        ONNX_URL="https://github.com/MelanTech/model_convert/releases/download/deim/deim_0929_final_real_book_old.onnx"
         
         wget -O onnx_artifacts/model.onnx $ONNX_URL
 
