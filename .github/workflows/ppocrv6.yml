@@ -1,0 +1,63 @@
+name: Convert PaddleOCRv6 to OM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  onnx2om:
+    runs-on: ubuntu-22.04
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+    - name: Prepare environment
+      shell: bash
+      run: |
+        set -euo pipefail
+        apt-get update
+        apt-get install -y wget
+        mkdir -p om
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+
+        wget -O om/doc_orientation.onnx \
+          https://github.com/MelanTech/model_convert/releases/download/ppocrv6-input/doc_orientation.onnx
+        wget -O om/rec.onnx \
+          https://github.com/MelanTech/model_convert/releases/download/ppocrv6-input/rec.onnx
+
+    - name: Convert document orientation model
+      shell: bash
+      working-directory: om
+      run: |
+        set -euo pipefail
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+        atc --model=doc_orientation.onnx \
+            --framework=5 \
+            --output=doc_orientation \
+            --input_format=NCHW \
+            --input_shape="x:-1,3,224,224" \
+            --dynamic_batch_size="1,2,4,8" \
+            --soc_version=Ascend310B4
+
+    - name: Convert recognition model
+      shell: bash
+      working-directory: om
+      run: |
+        set -euo pipefail
+        source /usr/local/Ascend/ascend-toolkit/set_env.sh
+        export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+        atc --model=rec.onnx \
+            --framework=5 \
+            --output=rec \
+            --input_format=NCHW \
+            --input_shape="x:-1,3,48,320" \
+            --dynamic_batch_size="1,2,4,8" \
+            --soc_version=Ascend310B4
+
+    - name: Upload OM artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ppocrv6-om-artifacts
+        path: om/*.om
