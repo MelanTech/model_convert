@@ -37,8 +37,7 @@ jobs:
             --framework=5 \
             --output=doc_orientation \
             --input_format=NCHW \
-            --input_shape="x:-1,3,224,224" \
-            --dynamic_batch_size="1,2,4,8" \
+            --input_shape="x:1,3,224,224" \
             --soc_version=Ascend310B4
 
     - name: Convert recognition model
@@ -52,8 +51,7 @@ jobs:
             --framework=5 \
             --output=rec \
             --input_format=NCHW \
-            --input_shape="x:-1,3,48,320" \
-            --dynamic_batch_size="1,2,4,8" \
+            --input_shape="x:1,3,48,320" \
             --soc_version=Ascend310B4
 
     - name: Upload OM artifact
