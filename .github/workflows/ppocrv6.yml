@@ -14,7 +14,7 @@ jobs:
     - name: Prepare environment
       shell: bash
       run: |
-        set -euo pipefail
+        set -eo pipefail
         apt-get update
         apt-get install -y wget
         mkdir -p om
@@ -30,7 +30,7 @@ jobs:
       shell: bash
       working-directory: om
       run: |
-        set -euo pipefail
+        set -eo pipefail
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
         atc --model=doc_orientation.onnx \
@@ -45,7 +45,7 @@ jobs:
       shell: bash
       working-directory: om
       run: |
-        set -euo pipefail
+        set -eo pipefail
         source /usr/local/Ascend/ascend-toolkit/set_env.sh
         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
         atc --model=rec.onnx \
