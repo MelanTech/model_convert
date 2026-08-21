@@ -52,6 +52,7 @@ jobs:
       - name: Commit OM to branch
         shell: bash
         run: |
+          apt-get update && apt-get install -y git
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
