@@ -1,0 +1,51 @@
+name: Convert DEIMv1s Original to OM
+
+on:
+  push:
+    branches:
+      - convert/deimv1s-original-20260821
+  workflow_dispatch:
+
+jobs:
+  onnx2om:
+    runs-on: ubuntu-22.04
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Convert ONNX to OM
+        shell: bash
+        run: |
+          mkdir -pv om
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+          cache=/tmp/atc_deimv1s_original_cache_${GITHUB_RUN_ID}
+          mkdir -p "$cache"
+          atc \
+            --model=onnx_artifacts/deimv1s_original.onnx \
+            --framework=5 \
+            --output=om/deimv1s_original \
+            --input_format=NCHW \
+            --input_shape="images:1,3,640,640;orig_target_sizes:1,2" \
+            --soc_version=Ascend310B4 \
+            --precision_mode=allow_mix_precision \
+            --op_select_implmode=high_precision_for_all \
+            --op_compiler_cache_dir="$cache" \
+            --op_compiler_cache_mode=force
+
+      - name: Inspect OM
+        shell: bash
+        run: |
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
+          atc --mode=6 --om=om/deimv1s_original.om
+
+      - name: Upload OM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deimv1s_original_om
+          path: om/deimv1s_original.om
