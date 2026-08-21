@@ -4,7 +4,12 @@ on:
   push:
     branches:
       - convert/deimv1s-original-20260821
+    paths-ignore:
+      - "om/**"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   onnx2om:
@@ -43,6 +48,16 @@ jobs:
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
           atc --mode=6 --om=om/deimv1s_original.om
+
+      - name: Commit OM to branch
+        shell: bash
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add om/deimv1s_original.om
+          git commit -m "convert: add deimv1s original om"
+          git push
 
       - name: Upload OM artifact
         uses: actions/upload-artifact@v4
