@@ -33,16 +33,18 @@ jobs:
         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
         export TE_PARALLEL_COMPILER=2
         mkdir -p "${GITHUB_WORKSPACE}/artifacts"
+        mkdir -p /tmp/atc_output
 
         atc --model=backbone_opset17_atc.onnx \
             --framework=5 \
-            --output="${GITHUB_WORKSPACE}/artifacts/backbone" \
+            --output=/tmp/atc_output/backbone \
             --input_format=NCHW \
             --input_shape="pixel_values:32,3,224,224" \
             --soc_version=Ascend310B4 \
             --precision_mode=allow_mix_precision
 
-        test -s "${GITHUB_WORKSPACE}/artifacts/backbone.om"
+        test -s /tmp/atc_output/backbone.om
+        cp /tmp/atc_output/backbone.om "${GITHUB_WORKSPACE}/artifacts/backbone.om"
         ls -lh "${GITHUB_WORKSPACE}/artifacts/backbone.om"
 
     - name: Upload OM artifact
