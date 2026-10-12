@@ -19,9 +19,9 @@ jobs:
         apt-get install -y wget
         mkdir -p om
 
-        wget -O om/backbone_opset17.onnx \
-          https://github.com/MelanTech/model_convert/releases/download/dinov3s-classifier-input/backbone_opset17.onnx
-        echo "acc5a01da1dce2a0b89a196fb0597b490dc4071690f06906a7d1ac3d6230b9a9  om/backbone_opset17.onnx" \
+        wget -O om/backbone_opset17_atc.onnx \
+          https://github.com/MelanTech/model_convert/releases/download/dinov3s-classifier-input/backbone_opset17_atc.onnx
+        echo "30b47b543e2084d74b1ff2cd098d8724f1349ccf0c2c2d217b54574debfed642  om/backbone_opset17_atc.onnx" \
           | sha256sum --check
 
     - name: Convert classifier backbone
@@ -33,7 +33,7 @@ jobs:
         export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:$LD_LIBRARY_PATH
         export TE_PARALLEL_COMPILER=2
 
-        atc --model=backbone_opset17.onnx \
+        atc --model=backbone_opset17_atc.onnx \
             --framework=5 \
             --output=backbone \
             --input_format=NCHW \
