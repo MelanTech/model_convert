@@ -41,8 +41,14 @@ jobs:
             --soc_version=Ascend310B4 \
             --precision_mode=allow_mix_precision
 
+        test -s backbone.om
+        mkdir -p "${GITHUB_WORKSPACE}/artifacts"
+        cp backbone.om "${GITHUB_WORKSPACE}/artifacts/backbone.om"
+        ls -lh "${GITHUB_WORKSPACE}/artifacts/backbone.om"
+
     - name: Upload OM artifact
       uses: actions/upload-artifact@v4
       with:
         name: dinov3s-classifier-om
-        path: om/backbone.om
+        path: artifacts/backbone.om
+        if-no-files-found: error
