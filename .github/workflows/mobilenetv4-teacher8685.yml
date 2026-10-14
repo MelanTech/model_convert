@@ -1,0 +1,58 @@
+name: Convert MobileNetV4 Teacher8685 to OM
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - mobilenetv4-teacher8685-om
+    paths:
+      - inputs/mobilenetv4_conv_small_teacher8685_b32.onnx
+      - .github/workflows/mobilenetv4-teacher8685.yml
+
+permissions:
+  contents: write
+
+jobs:
+  onnx2om:
+    runs-on: ubuntu-22.04
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+      - name: Check out conversion input
+        uses: actions/checkout@v4
+
+      - name: Convert ONNX to OM
+        shell: bash
+        run: |
+          set -euxo pipefail
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:${LD_LIBRARY_PATH:-}
+          mkdir -p om
+          sha256sum inputs/mobilenetv4_conv_small_teacher8685_b32.onnx
+          atc \
+            --model=inputs/mobilenetv4_conv_small_teacher8685_b32.onnx \
+            --framework=5 \
+            --output=om/model \
+            --input_format=NCHW \
+            --input_shape="pixel_values:32,3,224,224" \
+            --soc_version=Ascend310B4 \
+            --precision_mode=allow_mix_precision
+          test -s om/model.om
+          ls -lh om/model.om
+          sha256sum om/model.om
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobilenetv4-conv-small-teacher8685-om
+          path: om/model.om
+
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mobilenetv4-teacher8685-om
+          name: MobileNetV4 Conv Small Teacher8685 OM
+          files: om/model.om
+          overwrite_files: true
