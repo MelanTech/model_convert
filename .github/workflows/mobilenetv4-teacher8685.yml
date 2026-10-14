@@ -27,6 +27,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
           source /usr/local/Ascend/ascend-toolkit/set_env.sh
           export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:${LD_LIBRARY_PATH:-}
           mkdir -p om
