@@ -1,0 +1,62 @@
+name: Convert YOLO26m Datafix to OM
+
+on:
+  push:
+    branches:
+      - convert/yolo26m-datafix-20261015
+  workflow_dispatch:
+
+jobs:
+  onnx2om:
+    runs-on: ubuntu-22.04
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+      - name: Download YOLO26m datafix ONNX
+        shell: bash
+        run: |
+          set -eo pipefail
+          apt-get update
+          apt-get install -y wget
+          mkdir -p om
+
+          wget -O om/yolo26m_national_sim_aug_mosaic_datafix.onnx \
+            https://github.com/MelanTech/model_convert/releases/download/yolo26-datafix-input/yolo26m_national_sim_aug_mosaic_datafix.onnx
+          echo "d1237e8b775ceef72b311ef6f1098fee9d9d8955cd02f685e46b2cc8c185d0a1  om/yolo26m_national_sim_aug_mosaic_datafix.onnx" \
+            | sha256sum --check
+
+      - name: Convert YOLO26m datafix to Ascend310B4 OM
+        shell: bash
+        working-directory: om
+        run: |
+          set -eo pipefail
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:${LD_LIBRARY_PATH:-}
+          export TE_PARALLEL_COMPILER=2
+
+          cache="/tmp/atc_yolo26m_datafix_cache_${GITHUB_RUN_ID}"
+          mkdir -p "$cache"
+
+          atc \
+            --model=yolo26m_national_sim_aug_mosaic_datafix.onnx \
+            --framework=5 \
+            --output=yolo26m_national_sim_aug_mosaic_datafix \
+            --input_format=NCHW \
+            --input_shape="images:1,3,640,640" \
+            --soc_version=Ascend310B4 \
+            --precision_mode=allow_mix_precision \
+            --op_select_implmode=high_precision_for_all \
+            --op_compiler_cache_dir="$cache" \
+            --op_compiler_cache_mode=force
+
+          test -s yolo26m_national_sim_aug_mosaic_datafix.om
+          ls -lh yolo26m_national_sim_aug_mosaic_datafix.om
+
+      - name: Upload OM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo26m-datafix-om
+          path: om/yolo26m_national_sim_aug_mosaic_datafix.om
+          if-no-files-found: error
