@@ -1,0 +1,71 @@
+name: Convert YOLO26m Ext to OM
+
+on:
+  push:
+    branches:
+      - convert/yolo26m-ext-20261017
+  workflow_dispatch:
+
+jobs:
+  onnx2om:
+    runs-on: ubuntu-22.04
+    container:
+      image: kaylor/atc
+      options: --privileged
+
+    steps:
+      - name: Download YOLO26m ext ONNX
+        shell: bash
+        run: |
+          set -eo pipefail
+          apt-get update
+          apt-get install -y wget
+          mkdir -p om
+
+          wget -O om/yolo26m_national_ext_custom_aug_mosaic.onnx \
+            https://github.com/MelanTech/model_convert/releases/download/yolo26m-ext-input-20261017/yolo26m_national_ext_custom_aug_mosaic.onnx
+          echo "b72646105b518beb7aab9cdff4112fd121827243c465637f7065c4e8bdf842bb  om/yolo26m_national_ext_custom_aug_mosaic.onnx" \
+            | sha256sum --check
+
+      - name: Convert YOLO26m ext to Ascend310B4 OM
+        shell: bash
+        working-directory: om
+        run: |
+          set -eo pipefail
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:${LD_LIBRARY_PATH:-}
+          export TE_PARALLEL_COMPILER=2
+
+          cache="/tmp/atc_yolo26m_ext_cache_${GITHUB_RUN_ID}"
+          mkdir -p "$cache"
+
+          atc \
+            --model=yolo26m_national_ext_custom_aug_mosaic.onnx \
+            --framework=5 \
+            --output=yolo26m_national_ext_custom_aug_mosaic \
+            --input_format=NCHW \
+            --input_shape="images:1,3,640,640" \
+            --soc_version=Ascend310B4 \
+            --precision_mode=allow_mix_precision \
+            --op_select_implmode=high_precision_for_all \
+            --op_compiler_cache_dir="$cache" \
+            --op_compiler_cache_mode=force
+
+          test -s yolo26m_national_ext_custom_aug_mosaic.om
+          ls -lh yolo26m_national_ext_custom_aug_mosaic.om
+
+      - name: Validate generated OM
+        shell: bash
+        working-directory: om
+        run: |
+          set -eo pipefail
+          source /usr/local/Ascend/ascend-toolkit/set_env.sh
+          export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/x86_64-linux/devlib/:${LD_LIBRARY_PATH:-}
+          atc --mode=6 --om=yolo26m_national_ext_custom_aug_mosaic.om
+
+      - name: Upload OM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yolo26m-ext-om
+          path: om/yolo26m_national_ext_custom_aug_mosaic.om
+          if-no-files-found: error
